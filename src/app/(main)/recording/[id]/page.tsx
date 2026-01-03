@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Mic, Pause, Square, Play, AlertCircle, Save, MicOff, CheckCircle } from 'lucide-react';
+import { Mic, Pause, Square, Play, AlertCircle, Save, MicOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRecording } from '@/hooks/useRecording';
 import { useMeetings } from '@/hooks/useMeetings';
@@ -49,7 +49,6 @@ export default function RecordingPage() {
   const [showStopConfirm, setShowStopConfirm] = useState(false);
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
   const [showPermissionGuide, setShowPermissionGuide] = useState(false);
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   // Determine if we should show permission UI
   const needsPermission = permissionStatus === 'denied' || 
@@ -172,28 +171,21 @@ export default function RecordingPage() {
         },
       });
 
-      // Trigger the process-recording edge function to start transcription
-      console.log('[Recording] Triggering process-recording edge function...');
-      const { error: processError } = await supabase.functions.invoke('process-recording', {
+      // Trigger the process-recording edge function (fire-and-forget - don't wait)
+      console.log('[Recording] Triggering process-recording edge function (fire-and-forget)...');
+      supabase.functions.invoke('process-recording', {
         body: { meeting_id: meetingId },
+      }).then(({ error: processError }) => {
+        if (processError) {
+          console.error('[Recording] Edge function error:', processError);
+        } else {
+          console.log('[Recording] Edge function invoked successfully');
+        }
       });
 
-      if (processError) {
-        console.error('[Recording] Edge function error:', processError);
-        // Don't throw - the function runs async and meeting is already saved
-        // The meeting page will show processing status
-      } else {
-        console.log('[Recording] Edge function invoked successfully');
-      }
-
-      // Show success toast briefly before navigation
+      // Navigate immediately to meetings page - meeting will show as "Processing"
       setIsSaving(false);
-      setShowSuccessToast(true);
-      
-      // Navigate to meetings list after showing success feedback (2.5 seconds)
-      setTimeout(() => {
-        router.replace('/meetings');
-      }, 2500);
+      router.replace('/meetings');
     } catch (err) {
       console.error('[Recording] Stop/save error:', err);
       setIsSaving(false);
@@ -576,29 +568,6 @@ export default function RecordingPage() {
         )}
       </AnimatePresence>
 
-      {/* Success Toast */}
-      <AnimatePresence>
-        {showSuccessToast && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
-          >
-            <div className="bg-success text-white px-8 py-6 rounded-2xl shadow-2xl flex flex-col items-center gap-3">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", damping: 10, delay: 0.1 }}
-              >
-                <CheckCircle size={48} strokeWidth={2.5} />
-              </motion.div>
-              <p className="text-lg font-semibold">Recording Saved!</p>
-              <p className="text-white/80 text-sm">Processing your transcript...</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
