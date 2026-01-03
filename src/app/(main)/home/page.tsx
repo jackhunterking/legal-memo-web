@@ -46,7 +46,7 @@ export default function HomePage() {
     }
   }, [micStatus, permissionJustGranted]);
 
-  const handleRequestPermission = async () => {
+  const handleRequestPermission = async (): Promise<boolean> => {
     setIsRequestingPermission(true);
     try {
       const granted = await requestPermission();
@@ -54,6 +54,7 @@ export default function HomePage() {
         setPermissionJustGranted(true);
         setShowPermissionModal(false);
       }
+      return granted;
     } finally {
       setIsRequestingPermission(false);
     }
