@@ -27,6 +27,7 @@ export const isSupabaseConfigured = hasValidConfig;
 
 // Track auth token for Edge Functions
 let currentAuthToken: string | null = null;
+let functionsAuthInitialized = false;
 
 // Auto-initialize auth listener for Edge Functions on module load
 // This avoids redundant getSession calls - we rely on onAuthStateChange instead
@@ -35,6 +36,7 @@ if (typeof window !== 'undefined') {
     currentAuthToken = session?.access_token ?? null;
     try {
       await supabase.functions.setAuth(currentAuthToken ?? '');
+      functionsAuthInitialized = true;
     } catch (err) {
       console.error('[Supabase] setAuth error:', err);
     }

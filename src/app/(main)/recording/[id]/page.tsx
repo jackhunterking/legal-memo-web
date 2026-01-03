@@ -99,7 +99,7 @@ export default function RecordingPage() {
     }
   };
 
-  const handleRequestPermission = async () => {
+  const handleRequestPermission = async (): Promise<boolean> => {
     setIsRequestingPermission(true);
     try {
       const granted = await requestPermission();
@@ -108,6 +108,7 @@ export default function RecordingPage() {
         // Try to start recording after permission granted
         await handleStart();
       }
+      return granted;
     } finally {
       setIsRequestingPermission(false);
     }
