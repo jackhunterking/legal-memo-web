@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/auth-store';
 import { useSubscriptionRealtime } from '@/hooks/useSubscriptionRealtime';
@@ -12,6 +13,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const BACKGROUND_VERIFY_ENABLED = true;
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -31,6 +33,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const initialized = useRef(false);
   const loadingSetToFalse = useRef(false);
   const backgroundVerifyDone = useRef(false);
+  const passwordRecoveryHandled = useRef(false);
 
   // Initialize auth on mount
   useEffect(() => {
@@ -67,6 +70,21 @@ export function Providers({ children }: { children: React.ReactNode }) {
         
         // Clear the timeout since we got an auth response
         clearTimeout(loadingTimeout);
+        
+        // Handle PASSWORD_RECOVERY event - redirect to reset password page
+        // This handles the case where user clicks reset link and gets redirected here
+        if (event === 'PASSWORD_RECOVERY' && !passwordRecoveryHandled.current) {
+          console.log('[Providers] PASSWORD_RECOVERY event detected, redirecting to /reset-password');
+          passwordRecoveryHandled.current = true;
+          // Set the session first so the reset password page can use it
+          if (session) {
+            setUser(session.user);
+            setSession(session);
+          }
+          setLoadingFalseOnce();
+          router.replace('/reset-password');
+          return;
+        }
         
         if (session) {
           setUser(session.user);
@@ -111,7 +129,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       clearTimeout(loadingTimeout);
       subscription.unsubscribe();
     };
-  }, [setUser, setSession, setProfile, setLoading]);
+  }, [setUser, setSession, setProfile, setLoading, router]);
 
   // Background subscription verification (runs silently on app open)
   const backgroundVerifySubscription = useCallback(async (accessToken: string) => {

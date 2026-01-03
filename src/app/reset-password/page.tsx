@@ -23,15 +23,34 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        // Supabase automatically handles the token in the URL when detectSessionInUrl is true
-        // We just need to check if there's an active session after the redirect
+        // Check for recovery tokens in URL hash (e.g., #access_token=...&type=recovery)
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const type = hashParams.get('type');
+        const accessToken = hashParams.get('access_token');
+        
+        console.log('[ResetPassword] Checking session, type:', type, 'hasToken:', !!accessToken);
+        
+        // If we have recovery tokens in the URL, Supabase should process them
+        // Let's wait a bit for the session to be established
+        if (type === 'recovery' && accessToken) {
+          // Give Supabase time to process the tokens
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
+        // Check for active session
         const { data: { session }, error } = await supabase.auth.getSession();
+        
+        console.log('[ResetPassword] Session check result:', { 
+          hasSession: !!session, 
+          error: error?.message 
+        });
         
         if (error) {
           console.error('[ResetPassword] Session error:', error);
           setError('Invalid or expired reset link. Please request a new password reset.');
           setIsValidSession(false);
         } else if (session) {
+          // Valid session - user can reset password
           setIsValidSession(true);
         } else {
           // No session means the link might be invalid or expired
@@ -47,8 +66,8 @@ export default function ResetPasswordPage() {
       }
     };
 
-    // Small delay to let Supabase process the URL hash
-    const timer = setTimeout(checkSession, 500);
+    // Small delay to allow providers to handle PASSWORD_RECOVERY event first
+    const timer = setTimeout(checkSession, 100);
     return () => clearTimeout(timer);
   }, []);
 
