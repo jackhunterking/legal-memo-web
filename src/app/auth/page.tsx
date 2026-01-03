@@ -116,7 +116,17 @@ export default function AuthPage() {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Authentication failed';
       
-      if (message.toLowerCase().includes('already registered')) {
+      // Handle errors differently based on the current mode
+      if (isForgotPassword) {
+        // For password reset, show the actual error or a friendly message
+        if (message.toLowerCase().includes('rate') || message.toLowerCase().includes('limit')) {
+          setError('Too many requests. Please wait a moment before trying again.');
+        } else if (message.toLowerCase().includes('not found') || message.toLowerCase().includes('no user')) {
+          setError('No account found with this email address.');
+        } else {
+          setError(message || 'Failed to send reset link. Please try again.');
+        }
+      } else if (message.toLowerCase().includes('already registered')) {
         setError('An account with this email already exists. Please sign in instead.');
         setIsLogin(true);
       } else if (message.toLowerCase().includes('invalid')) {
