@@ -6,7 +6,6 @@ import {
   ArrowLeft,
   Play,
   Pause,
-  Edit,
   Share2,
   Trash2,
   Clock,
@@ -19,11 +18,15 @@ import {
   Lock,
   Mic,
   ChevronRight,
+  MoreVertical,
+  Pencil,
+  X,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMeetings } from '@/hooks/useMeetings';
 import { useUsage } from '@/hooks/useUsage';
 import { useAuth } from '@/hooks/useAuth';
+import { useContacts } from '@/hooks/useContacts';
 import { useMeetingShares, useCreateShare, useToggleShare, useDeleteShare } from '@/hooks/useMeetingShares';
 import { supabase } from '@/lib/supabase';
 import Colors from '@/lib/colors';
@@ -31,6 +34,9 @@ import { formatDuration, formatCurrency, formatBillableHours, MeetingStatus, Tra
 import TranscriptSection from '@/components/ui/TranscriptSection';
 import BillableEditorModal from '@/components/ui/BillableEditorModal';
 import ShareMeetingModal from '@/components/ui/ShareMeetingModal';
+import MeetingNameModal from '@/components/ui/MeetingNameModal';
+import MeetingTypeModal from '@/components/ui/MeetingTypeModal';
+import ContactSelectorModal from '@/components/ui/ContactSelectorModal';
 
 export default function MeetingDetailPage() {
   const params = useParams();
@@ -40,6 +46,7 @@ export default function MeetingDetailPage() {
   const { user, profile, isLoading: isAuthLoading } = useAuth();
   const { meetings, meetingTypes, deleteMeeting, updateMeeting, isLoading: isMeetingsLoading, refetchMeetings } = useMeetings();
   const { hasActiveSubscription, hasActiveTrial } = useUsage();
+  const { contacts } = useContacts();
   
   const [isLoadingDetails, setIsLoadingDetails] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -55,6 +62,13 @@ export default function MeetingDetailPage() {
   const [showBillableEditor, setShowBillableEditor] = useState(false);
   const [isSavingBilling, setIsSavingBilling] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showHeaderMenu, setShowHeaderMenu] = useState(false);
+  const [showMeetingNameModal, setShowMeetingNameModal] = useState(false);
+  const [showMeetingTypeModal, setShowMeetingTypeModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [isSavingName, setIsSavingName] = useState(false);
+  const [isSavingType, setIsSavingType] = useState(false);
+  const [isSavingContact, setIsSavingContact] = useState(false);
   
   // Share hooks
   const { data: shares = [], isLoading: isLoadingShares } = useMeetingShares(meetingId);
@@ -382,6 +396,57 @@ export default function MeetingDetailPage() {
       setIsPlaying(true);
     }
   }, [isPlaying]);
+
+  // Handle meeting name save
+  const handleSaveMeetingName = async (newTitle: string) => {
+    setIsSavingName(true);
+    try {
+      await updateMeeting({
+        meetingId,
+        updates: { title: newTitle },
+      });
+      setShowMeetingNameModal(false);
+    } catch (err) {
+      console.error('[MeetingDetail] Save name error:', err);
+      throw err;
+    } finally {
+      setIsSavingName(false);
+    }
+  };
+
+  // Handle meeting type save
+  const handleSaveMeetingType = async (typeId: string | null) => {
+    setIsSavingType(true);
+    try {
+      await updateMeeting({
+        meetingId,
+        updates: { meeting_type_id: typeId },
+      });
+      setShowMeetingTypeModal(false);
+    } catch (err) {
+      console.error('[MeetingDetail] Save type error:', err);
+      throw err;
+    } finally {
+      setIsSavingType(false);
+    }
+  };
+
+  // Handle contact save
+  const handleSaveContact = async (contactId: string | null) => {
+    setIsSavingContact(true);
+    try {
+      await updateMeeting({
+        meetingId,
+        updates: { contact_id: contactId },
+      });
+      setShowContactModal(false);
+    } catch (err) {
+      console.error('[MeetingDetail] Save contact error:', err);
+      throw err;
+    } finally {
+      setIsSavingContact(false);
+    }
+  };
   
   // Share modal handlers
   const handleOpenShareModal = () => {
@@ -540,20 +605,19 @@ export default function MeetingDetailPage() {
       <div className="min-h-screen pb-8">
         {/* Header - Show real data */}
         <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-10">
-          <div className="flex items-center justify-between px-4 py-3">
+          <div className="max-w-2xl mx-auto flex items-center justify-between px-4 py-3">
             <button
               onClick={() => router.back()}
               className="p-2 hover:bg-surface rounded-lg transition-colors"
             >
               <ArrowLeft size={24} className="text-text" />
             </button>
-            <h1 className="text-lg font-semibold text-text flex-1 text-center truncate px-2">
-              {meeting.title}
-            </h1>
-            <div className="flex items-center gap-1">
-              <div className="p-2"><Share2 size={20} className="text-text-secondary" /></div>
-              <div className="p-2"><Edit size={20} className="text-text-secondary" /></div>
-              <div className="p-2"><Trash2 size={20} className="text-text-muted" /></div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 px-4 py-2 bg-surface rounded-xl border border-border">
+                <Share2 size={18} className="text-text-secondary" />
+                <span className="text-sm font-medium text-text">Share</span>
+              </div>
+              <div className="p-2"><MoreVertical size={20} className="text-text-secondary" /></div>
             </div>
           </div>
         </div>
@@ -601,7 +665,7 @@ export default function MeetingDetailPage() {
     <div className="min-h-screen pb-8">
       {/* Header */}
       <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-10">
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="max-w-2xl mx-auto flex items-center justify-between px-4 py-3">
           <button
             onClick={() => router.back()}
             className="p-2 hover:bg-surface rounded-lg transition-colors"
@@ -609,43 +673,77 @@ export default function MeetingDetailPage() {
             <ArrowLeft size={24} className="text-text" />
           </button>
           
-          <h1 className="text-lg font-semibold text-text flex-1 text-center truncate px-2">
-            {meeting.title}
-          </h1>
-          
-          {/* Action Buttons - expanded */}
-          <div className="flex items-center gap-1">
+          {/* Action Buttons - Share button + 3-dot menu */}
+          <div className="flex items-center gap-2">
+            {/* Share Button with text */}
             <button
               onClick={handleOpenShareModal}
-              className="p-2 hover:bg-surface rounded-lg transition-colors"
-              title="Share"
+              className="flex items-center gap-2 px-4 py-2 bg-surface hover:bg-surface-light rounded-xl transition-colors border border-border"
             >
-              <Share2 size={20} className="text-text-secondary" />
+              <Share2 size={18} className="text-text-secondary" />
+              <span className="text-sm font-medium text-text">Share</span>
             </button>
             
-            <button
-              onClick={() => router.push(`/edit-meeting?id=${meetingId}`)}
-              className="p-2 hover:bg-surface rounded-lg transition-colors"
-              title="Edit"
-            >
-              <Edit size={20} className="text-text-secondary" />
-            </button>
-            
-            <button
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="p-2 hover:bg-surface rounded-lg transition-colors disabled:opacity-50"
-              title="Delete"
-            >
-              <Trash2 size={20} className="text-error" />
-            </button>
+            {/* 3-dot Menu */}
+            <div className="relative">
+              <button
+                onClick={() => setShowHeaderMenu(!showHeaderMenu)}
+                className="p-2 hover:bg-surface rounded-lg transition-colors"
+              >
+                <MoreVertical size={20} className="text-text-secondary" />
+              </button>
+              
+              {/* Dropdown Menu */}
+              <AnimatePresence>
+                {showHeaderMenu && (
+                  <>
+                    {/* Backdrop to close menu */}
+                    <div 
+                      className="fixed inset-0 z-20" 
+                      onClick={() => setShowHeaderMenu(false)}
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full mt-2 w-48 bg-surface rounded-xl border border-border shadow-xl z-30 overflow-hidden"
+                    >
+                      <button
+                        onClick={() => {
+                          setShowHeaderMenu(false);
+                          setShowMeetingNameModal(true);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-light transition-colors text-left"
+                      >
+                        <Pencil size={18} className="text-text-secondary" />
+                        <span className="text-text text-sm font-medium">Edit Name</span>
+                      </button>
+                      <div className="h-px bg-border" />
+                      <button
+                        onClick={() => {
+                          setShowHeaderMenu(false);
+                          handleDelete();
+                        }}
+                        disabled={isDeleting}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-light transition-colors text-left disabled:opacity-50"
+                      >
+                        <Trash2 size={18} className="text-error" />
+                        <span className="text-error text-sm font-medium">Delete Meeting</span>
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>
       
       {/* Locked Banner */}
       {isLocked && (
-        <div className="mx-4 mt-4 p-4 bg-warning/10 border border-warning/30 rounded-xl flex items-center gap-3">
+        <div className="max-w-2xl mx-auto px-4 mt-4">
+        <div className="p-4 bg-warning/10 border border-warning/30 rounded-xl flex items-center gap-3">
           <Lock size={20} className="text-warning" />
           <div className="flex-1">
             <p className="text-warning font-semibold">Subscription Required</p>
@@ -658,28 +756,32 @@ export default function MeetingDetailPage() {
             Subscribe
           </button>
         </div>
+        </div>
       )}
       
       {/* Status Banner - shown when not ready */}
       {meeting.status !== 'ready' && (
-        <div 
-          className="mx-4 mt-4 px-4 py-3 rounded-xl flex items-center justify-between"
-          style={{ backgroundColor: statusInfo.color + '20' }}
-        >
-          <span className="font-semibold" style={{ color: statusInfo.color }}>
-            {statusInfo.label}
-          </span>
-          {meeting.status === 'failed' && (
-            <button className="flex items-center gap-1.5 text-accent-light font-medium text-sm">
-              <RefreshCw size={14} />
-              Retry
-            </button>
-          )}
+        <div className="max-w-2xl mx-auto px-4 mt-4">
+          <div 
+            className="px-4 py-3 rounded-xl flex items-center justify-between"
+            style={{ backgroundColor: statusInfo.color + '20' }}
+          >
+            <span className="font-semibold" style={{ color: statusInfo.color }}>
+              {statusInfo.label}
+            </span>
+            {meeting.status === 'failed' && (
+              <button className="flex items-center gap-1.5 text-accent-light font-medium text-sm">
+                <RefreshCw size={14} />
+                Retry
+              </button>
+            )}
+          </div>
         </div>
       )}
 
       {/* Meeting Details Card */}
-      <div className="mx-4 mt-4 bg-surface rounded-2xl border border-border overflow-hidden">
+      <div className="max-w-2xl mx-auto px-4 mt-4">
+      <div className="bg-surface rounded-2xl border border-border overflow-hidden">
         {/* Header Section - Duration & Date */}
         <div className="p-5 flex flex-col items-center">
           {/* Duration Display */}
@@ -711,9 +813,26 @@ export default function MeetingDetailPage() {
 
         {/* Body Section - Details */}
         <div className="p-4 space-y-1">
+          {/* Meeting Name Row */}
+          <button
+            onClick={() => setShowMeetingNameModal(true)}
+            className="w-full flex items-center justify-between py-3 hover:bg-surface-light rounded-lg px-2 -mx-2 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <Pencil size={18} className="text-text-muted" />
+              <span className="text-text-secondary">Meeting Name</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-text text-sm font-medium truncate max-w-[200px]">
+                {meeting.title}
+              </span>
+              <ChevronRight size={18} className="text-text-muted" />
+            </div>
+          </button>
+
           {/* Meeting Type Row */}
           <button
-            onClick={() => router.push(`/edit-meeting?id=${meetingId}`)}
+            onClick={() => setShowMeetingTypeModal(true)}
             className="w-full flex items-center justify-between py-3 hover:bg-surface-light rounded-lg px-2 -mx-2 transition-colors"
           >
             <div className="flex items-center gap-3">
@@ -746,7 +865,7 @@ export default function MeetingDetailPage() {
 
           {/* Contact Row */}
           <button
-            onClick={() => meeting.contact ? router.push(`/contact/${meeting.contact.id}`) : router.push(`/edit-meeting?id=${meetingId}`)}
+            onClick={() => setShowContactModal(true)}
             className="w-full flex items-center justify-between py-3 hover:bg-surface-light rounded-lg px-2 -mx-2 transition-colors"
           >
             <div className="flex items-center gap-3">
@@ -809,10 +928,12 @@ export default function MeetingDetailPage() {
           </div>
         </div>
       </div>
+      </div>
 
       {/* Billing Card - Show when billable is enabled */}
       {meeting.is_billable && (
-        <div className="mx-4 mt-4 bg-surface rounded-2xl border border-border overflow-hidden">
+        <div className="max-w-2xl mx-auto px-4 mt-4">
+        <div className="bg-surface rounded-2xl border border-border overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border">
             <h3 className="font-semibold text-text">Billing</h3>
@@ -853,11 +974,13 @@ export default function MeetingDetailPage() {
             )}
           </div>
         </div>
+        </div>
       )}
       
       {/* Audio Player */}
       {audioUrl && !isLocked && (
-        <div className="mx-4 mt-4 mb-4 bg-surface rounded-2xl p-4 border border-border">
+        <div className="max-w-2xl mx-auto px-4 mt-4 mb-4">
+        <div className="bg-surface rounded-2xl p-4 border border-border">
           <audio
             ref={audioRef}
             src={audioUrl}
@@ -912,11 +1035,12 @@ export default function MeetingDetailPage() {
             </button>
           </div>
         </div>
+        </div>
       )}
       
       {/* Summary */}
       {transcript?.summary && !isLocked && (
-        <div className="mx-4 mt-4">
+        <div className="max-w-2xl mx-auto px-4 mt-4">
           <div className="bg-surface rounded-2xl p-4 border border-border">
             <h2 className="text-lg font-semibold text-text mb-3">Summary</h2>
             <p className="text-text-secondary whitespace-pre-wrap leading-relaxed">{transcript.summary}</p>
@@ -926,7 +1050,7 @@ export default function MeetingDetailPage() {
       
       {/* Transcript */}
       {((segments.length > 0) || transcript?.full_text) && !isLocked && (
-        <div className="mx-4 mt-4">
+        <div className="max-w-2xl mx-auto px-4 mt-4">
           <TranscriptSection
             segments={segments}
             fullText={transcript?.full_text}
@@ -944,7 +1068,7 @@ export default function MeetingDetailPage() {
       
       {/* Processing State - Enhanced with step indicators */}
       {(meeting.status === 'transcribing' || meeting.status === 'converting' || meeting.status === 'queued' || meeting.status === 'uploading') && (
-        <div className="mx-4 mt-4 text-center">
+        <div className="max-w-2xl mx-auto px-4 mt-4 text-center">
           <div className="bg-surface rounded-2xl p-8 border border-border">
             {/* Animated Processing Icon */}
             <div className="relative w-20 h-20 mx-auto mb-6">
@@ -1061,7 +1185,7 @@ export default function MeetingDetailPage() {
       
       {/* Failed State */}
       {meeting.status === 'failed' && (
-        <div className="mx-4 mt-4 text-center">
+        <div className="max-w-2xl mx-auto px-4 mt-4 text-center">
           <div className="bg-surface rounded-2xl p-8 border border-error/30">
             <AlertCircle size={48} className="text-error mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-text mb-2">Processing Failed</h3>
@@ -1112,6 +1236,41 @@ export default function MeetingDetailPage() {
           onDeleteShare={handleDeleteShare}
           isCreating={isCreatingShare}
           isToggling={isTogglingShare}
+        />
+      )}
+
+      {/* Meeting Name Modal */}
+      {meeting && (
+        <MeetingNameModal
+          visible={showMeetingNameModal}
+          onClose={() => setShowMeetingNameModal(false)}
+          currentTitle={meeting.title}
+          onSave={handleSaveMeetingName}
+          isSaving={isSavingName}
+        />
+      )}
+
+      {/* Meeting Type Modal */}
+      {meeting && (
+        <MeetingTypeModal
+          visible={showMeetingTypeModal}
+          onClose={() => setShowMeetingTypeModal(false)}
+          meetingTypes={meetingTypes || []}
+          currentTypeId={meeting.meeting_type_id}
+          onSelect={handleSaveMeetingType}
+          isSaving={isSavingType}
+        />
+      )}
+
+      {/* Contact Selector Modal */}
+      {meeting && (
+        <ContactSelectorModal
+          visible={showContactModal}
+          onClose={() => setShowContactModal(false)}
+          contacts={contacts || []}
+          currentContactId={meeting.contact_id}
+          onSelect={handleSaveContact}
+          isSaving={isSavingContact}
         />
       )}
     </div>
