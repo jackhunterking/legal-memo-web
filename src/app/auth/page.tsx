@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { SUBSCRIPTION_PLAN } from '@/types';
 import AuthMessageModal, { AuthModalType } from '@/components/ui/AuthMessageModal';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { trackCompleteRegistration } from '@/lib/meta-capi';
 
 const BENEFITS = [
   {
@@ -114,6 +115,11 @@ export default function AuthPage() {
       } else {
         await signUp(email.trim(), password);
         trackEvent('user_signed_up', { method: 'email' });
+        // Track CompleteRegistration in Meta CAPI for Facebook attribution
+        trackCompleteRegistration(
+          { email: email.trim() },
+          { registration_method: 'email' }
+        );
         setAuthModalEmail(email.trim());
         setAuthModalType('emailConfirmation');
         setShowAuthModal(true);
