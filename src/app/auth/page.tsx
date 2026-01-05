@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { SUBSCRIPTION_PLAN } from '@/types';
 import AuthMessageModal, { AuthModalType } from '@/components/ui/AuthMessageModal';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 const BENEFITS = [
   {
@@ -41,6 +42,7 @@ const FEATURES = [
 export default function AuthPage() {
   const router = useRouter();
   const { signIn, signUp, resetPassword, isLoading, isAuthenticated, error: authError } = useAuth();
+  const { trackEvent } = useAnalytics();
   
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -101,14 +103,17 @@ export default function AuthPage() {
       if (isForgotPassword) {
         // Handle forgot password
         await resetPassword(email.trim());
+        trackEvent('password_reset_requested');
         setAuthModalEmail(email.trim());
         setAuthModalType('passwordReset');
         setShowAuthModal(true);
       } else if (isLogin) {
         await signIn(email.trim(), password);
+        trackEvent('user_signed_in');
         router.replace('/home');
       } else {
         await signUp(email.trim(), password);
+        trackEvent('user_signed_up', { method: 'email' });
         setAuthModalEmail(email.trim());
         setAuthModalType('emailConfirmation');
         setShowAuthModal(true);

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/auth-store';
 import { useSubscriptionRealtime } from '@/hooks/useSubscriptionRealtime';
+import { posthog } from '@/lib/posthog';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
@@ -90,6 +91,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
           setUser(session.user);
           setSession(session);
           
+          // Identify user in PostHog
+          posthog?.identify(session.user.id, {
+            email: session.user.email,
+            created_at: session.user.created_at,
+          });
+          
           // Fetch profile on any session event
           supabase
             .from('profiles')
@@ -104,6 +111,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
               if (profile) {
                 console.log('[Providers] Profile loaded:', profile.email);
                 setProfile(profile);
+                
+                // Set user properties in PostHog
+                posthog?.people?.set({
+                  display_name: profile.display_name,
+                  onboarding_completed: profile.onboarding_completed,
+                  hourly_rate: profile.hourly_rate,
+                });
               }
             });
           
@@ -117,6 +131,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
           setSession(null);
           setProfile(null);
           backgroundVerifyDone.current = false;
+          
+          // Reset PostHog identity on sign out
+          posthog?.reset();
         }
         
         // Set loading false after processing auth state

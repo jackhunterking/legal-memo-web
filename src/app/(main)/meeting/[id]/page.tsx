@@ -605,7 +605,7 @@ export default function MeetingDetailPage() {
       <div className="min-h-screen pb-8">
         {/* Header - Show real data */}
         <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-10">
-          <div className="max-w-2xl mx-auto flex items-center justify-between px-4 py-3">
+          <div className="max-w-3xl mx-auto flex items-center justify-between px-4 py-3">
             <button
               onClick={() => router.back()}
               className="p-2 hover:bg-surface rounded-lg transition-colors"
@@ -665,7 +665,7 @@ export default function MeetingDetailPage() {
     <div className="min-h-screen pb-8">
       {/* Header */}
       <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-10">
-        <div className="max-w-2xl mx-auto flex items-center justify-between px-4 py-3">
+        <div className="max-w-3xl mx-auto flex items-center justify-between px-4 py-3">
           <button
             onClick={() => router.back()}
             className="p-2 hover:bg-surface rounded-lg transition-colors"
@@ -742,7 +742,7 @@ export default function MeetingDetailPage() {
       
       {/* Locked Banner */}
       {isLocked && (
-        <div className="max-w-2xl mx-auto px-4 mt-4">
+        <div className="max-w-3xl mx-auto px-4 mt-4">
         <div className="p-4 bg-warning/10 border border-warning/30 rounded-xl flex items-center gap-3">
           <Lock size={20} className="text-warning" />
           <div className="flex-1">
@@ -761,7 +761,7 @@ export default function MeetingDetailPage() {
       
       {/* Status Banner - shown when not ready */}
       {meeting.status !== 'ready' && (
-        <div className="max-w-2xl mx-auto px-4 mt-4">
+        <div className="max-w-3xl mx-auto px-4 mt-4">
           <div 
             className="px-4 py-3 rounded-xl flex items-center justify-between"
             style={{ backgroundColor: statusInfo.color + '20' }}
@@ -780,7 +780,7 @@ export default function MeetingDetailPage() {
       )}
 
       {/* Meeting Details Card */}
-      <div className="max-w-2xl mx-auto px-4 mt-4">
+      <div className="max-w-3xl mx-auto px-4 mt-4">
       <div className="bg-surface rounded-2xl border border-border overflow-hidden">
         {/* Header Section - Duration & Date */}
         <div className="p-5 flex flex-col items-center">
@@ -932,7 +932,7 @@ export default function MeetingDetailPage() {
 
       {/* Billing Card - Show when billable is enabled */}
       {meeting.is_billable && (
-        <div className="max-w-2xl mx-auto px-4 mt-4">
+        <div className="max-w-3xl mx-auto px-4 mt-4">
         <div className="bg-surface rounded-2xl border border-border overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border">
@@ -979,7 +979,7 @@ export default function MeetingDetailPage() {
       
       {/* Audio Player */}
       {audioUrl && !isLocked && (
-        <div className="max-w-2xl mx-auto px-4 mt-4 mb-4">
+        <div className="max-w-3xl mx-auto px-4 mt-4 mb-4">
         <div className="bg-surface rounded-2xl p-4 border border-border">
           <audio
             ref={audioRef}
@@ -1040,7 +1040,7 @@ export default function MeetingDetailPage() {
       
       {/* Summary */}
       {transcript?.summary && !isLocked && (
-        <div className="max-w-2xl mx-auto px-4 mt-4">
+        <div className="max-w-3xl mx-auto px-4 mt-4">
           <div className="bg-surface rounded-2xl p-4 border border-border">
             <h2 className="text-lg font-semibold text-text mb-3">Summary</h2>
             <p className="text-text-secondary whitespace-pre-wrap leading-relaxed">{transcript.summary}</p>
@@ -1050,7 +1050,7 @@ export default function MeetingDetailPage() {
       
       {/* Transcript */}
       {((segments.length > 0) || transcript?.full_text) && !isLocked && (
-        <div className="max-w-2xl mx-auto px-4 mt-4">
+        <div className="max-w-3xl mx-auto px-4 mt-4">
           <TranscriptSection
             segments={segments}
             fullText={transcript?.full_text}
@@ -1068,7 +1068,7 @@ export default function MeetingDetailPage() {
       
       {/* Processing State - Enhanced with step indicators */}
       {(meeting.status === 'transcribing' || meeting.status === 'converting' || meeting.status === 'queued' || meeting.status === 'uploading') && (
-        <div className="max-w-2xl mx-auto px-4 mt-4 text-center">
+        <div className="max-w-3xl mx-auto px-4 mt-4 text-center">
           <div className="bg-surface rounded-2xl p-8 border border-border">
             {/* Animated Processing Icon */}
             <div className="relative w-20 h-20 mx-auto mb-6">
@@ -1185,7 +1185,7 @@ export default function MeetingDetailPage() {
       
       {/* Failed State */}
       {meeting.status === 'failed' && (
-        <div className="max-w-2xl mx-auto px-4 mt-4 text-center">
+        <div className="max-w-3xl mx-auto px-4 mt-4 text-center">
           <div className="bg-surface rounded-2xl p-8 border border-error/30">
             <AlertCircle size={48} className="text-error mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-text mb-2">Processing Failed</h3>

@@ -8,6 +8,7 @@ import { useMeetings } from '@/hooks/useMeetings';
 import { useUsage } from '@/hooks/useUsage';
 import { useMicrophonePermission } from '@/hooks/useMicrophonePermission';
 import { MicrophonePermissionGuide } from '@/components/ui/MicrophonePermissionGuide';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 type ExpectedSpeakers = 1 | 2 | 3;
 
@@ -15,6 +16,7 @@ export default function HomePage() {
   const router = useRouter();
   const { createMeeting, isCreating } = useMeetings();
   const { canRecord, subscription } = useUsage();
+  const { trackEvent } = useAnalytics();
   const [expectedSpeakers, setExpectedSpeakers] = useState<ExpectedSpeakers>(2);
   const [showTrialModal, setShowTrialModal] = useState(false);
   
@@ -75,6 +77,7 @@ export default function HomePage() {
       // User is authorized - proceed to recording immediately
       try {
         const meeting = await createMeeting(expectedSpeakers);
+        trackEvent('recording_started', { expected_speakers: expectedSpeakers });
         router.push(`/recording/${meeting.id}`);
       } catch (error) {
         console.error('[Home] Failed to create meeting:', error);
@@ -87,6 +90,7 @@ export default function HomePage() {
     // Show appropriate UI without blocking verification
     if (hasNeverHadTrial) {
       // User has never started a trial - show opt-in modal
+      trackEvent('trial_modal_shown');
       setShowTrialModal(true);
     } else {
       // User's subscription/trial has expired - redirect to subscription
