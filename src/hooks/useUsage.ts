@@ -52,9 +52,9 @@ export function useUsage() {
         .from('subscriptions')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
       return data as Subscription | null;
     },
     enabled: !!user?.id,
@@ -88,9 +88,9 @@ export function useUsage() {
         .from('usage_credits')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
       return data as UsageCredits | null;
     },
     enabled: !!user?.id,
