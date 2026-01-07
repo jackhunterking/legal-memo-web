@@ -411,7 +411,7 @@ export default function RecordingPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col items-center justify-center px-6">
         {/* Duration Display */}
-        <div className="mb-12">
+        <div className="mb-8">
           <motion.p 
             className="text-6xl font-bold text-text font-mono tracking-wide"
             animate={isPaused ? { opacity: [1, 0.5, 1] } : {}}
@@ -423,13 +423,13 @@ export default function RecordingPage() {
 
         {/* Live Waveform Indicator */}
         {isRecording && !isPaused && (
-          <div className="flex items-center justify-center gap-1 mb-12 h-16">
+          <div className="flex items-center justify-center gap-1 mb-8 h-12">
             {[...Array(12)].map((_, i) => (
               <motion.div
                 key={i}
                 className="w-1 bg-accent-light rounded-full"
                 animate={{
-                  height: [8, 40, 8],
+                  height: [6, 32, 6],
                 }}
                 transition={{
                   duration: 0.8,
@@ -444,92 +444,125 @@ export default function RecordingPage() {
 
         {/* Paused Indicator */}
         {isPaused && (
-          <div className="mb-12 h-16 flex items-center">
+          <div className="mb-8 h-12 flex items-center">
             <p className="text-text-secondary">Recording paused</p>
           </div>
         )}
 
-        {/* Recording Animation */}
-        <div className="relative mb-8">
-          {/* Pulse rings */}
-          {isRecording && !isPaused && (
-            <>
-              <motion.div
-                className="absolute inset-0 rounded-full bg-recording"
-                style={{ width: 180, height: 180, marginLeft: -15, marginTop: -15 }}
-                animate={{
-                  scale: [1, 1.3, 1],
-                  opacity: [0.3, 0, 0.3],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
-              />
-              <motion.div
-                className="absolute inset-0 rounded-full bg-recording"
-                style={{ width: 180, height: 180, marginLeft: -15, marginTop: -15 }}
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.2, 0, 0.2],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                  delay: 0.5,
-                }}
-              />
-            </>
-          )}
-
-          {/* Recording indicator circle */}
-          <div className={`w-[150px] h-[150px] rounded-full flex items-center justify-center ${
-            isPaused ? 'bg-surface-light' : 'bg-recording'
-          }`}>
-            <Mic size={64} className="text-white" strokeWidth={2} />
+        {/* Starting Indicator - show when not yet recording */}
+        {!isRecording && !isPaused && hasStarted && (
+          <div className="mb-8 h-12 flex items-center">
+            <p className="text-text-secondary">Starting...</p>
           </div>
-        </div>
-      </div>
+        )}
 
-      {/* Controls */}
-      <div className="pb-12 px-6">
-        <div className="flex items-center justify-center gap-6">
-          {/* Pause/Resume Button */}
-          <button
-            onClick={handlePauseResume}
-            disabled={!isRecording}
-            className="w-16 h-16 rounded-full bg-surface border border-border flex items-center justify-center hover:bg-surface-light transition-colors disabled:opacity-50"
-          >
-            {isPaused ? (
-              <Play size={28} className="text-text ml-1" fill="currentColor" />
-            ) : (
-              <Pause size={28} className="text-text" />
+        {/* Control Buttons Row - All three buttons centered together */}
+        <div className="flex items-center justify-center gap-6 mb-8">
+          {/* Pause/Resume Button - only visible when recording */}
+          <AnimatePresence>
+            {(isRecording || isPaused) && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8, x: 20 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.8, x: 20 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                onClick={handlePauseResume}
+                className="w-16 h-16 rounded-full bg-surface border border-border flex items-center justify-center hover:bg-surface-light transition-colors"
+              >
+                {isPaused ? (
+                  <Play size={28} className="text-text ml-1" fill="currentColor" />
+                ) : (
+                  <Pause size={28} className="text-text" />
+                )}
+              </motion.button>
             )}
-          </button>
+          </AnimatePresence>
 
-          {/* Stop Button */}
-          <button
-            onClick={() => setShowStopConfirm(true)}
-            disabled={!isRecording && !isPaused}
-            className="w-20 h-20 rounded-full bg-recording flex items-center justify-center hover:bg-recording/90 transition-colors disabled:opacity-50"
-            style={{
-              boxShadow: '0 8px 24px rgba(239, 68, 68, 0.4)',
-            }}
-          >
-            <Square size={32} className="text-white" fill="currentColor" />
-          </button>
+          {/* Microphone Indicator - Center element */}
+          <div className="relative">
+            {/* Pulse rings - only when actively recording */}
+            {isRecording && !isPaused && (
+              <>
+                <motion.div
+                  className="absolute rounded-full bg-recording"
+                  style={{ 
+                    width: 100, 
+                    height: 100, 
+                    left: '50%',
+                    top: '50%',
+                    marginLeft: -50, 
+                    marginTop: -50 
+                  }}
+                  animate={{
+                    scale: [1, 1.4, 1],
+                    opacity: [0.3, 0, 0.3],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
+                />
+                <motion.div
+                  className="absolute rounded-full bg-recording"
+                  style={{ 
+                    width: 100, 
+                    height: 100, 
+                    left: '50%',
+                    top: '50%',
+                    marginLeft: -50, 
+                    marginTop: -50 
+                  }}
+                  animate={{
+                    scale: [1, 1.25, 1],
+                    opacity: [0.2, 0, 0.2],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                    delay: 0.5,
+                  }}
+                />
+              </>
+            )}
 
-          {/* Spacer for alignment */}
-          <div className="w-16" />
+            {/* Recording indicator circle */}
+            <div className={`relative z-10 w-20 h-20 rounded-full flex items-center justify-center ${
+              isPaused ? 'bg-surface-light border-2 border-border' : 'bg-recording'
+            }`}
+            style={!isPaused && isRecording ? {
+              boxShadow: '0 4px 20px rgba(239, 68, 68, 0.4)',
+            } : undefined}
+            >
+              <Mic size={36} className={isPaused ? 'text-text-secondary' : 'text-white'} strokeWidth={2} />
+            </div>
+          </div>
+
+          {/* Stop Button - only visible when recording */}
+          <AnimatePresence>
+            {(isRecording || isPaused) && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8, x: -20 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.8, x: -20 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                onClick={() => setShowStopConfirm(true)}
+                className="w-16 h-16 rounded-full bg-surface border-2 border-recording flex items-center justify-center hover:bg-recording/10 transition-colors"
+              >
+                <Square size={24} className="text-recording" fill="currentColor" />
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Hint text */}
-        <p className="text-text-muted text-sm text-center mt-6">
-          {isPaused 
-            ? 'Tap play to resume or stop to finish'
-            : 'Tap the stop button when you\'re done'
+        <p className="text-text-muted text-sm text-center">
+          {!isRecording && !isPaused
+            ? 'Preparing to record...'
+            : isPaused 
+              ? 'Tap play to resume or stop to finish'
+              : 'Tap pause to take a break, or stop when done'
           }
         </p>
       </div>
