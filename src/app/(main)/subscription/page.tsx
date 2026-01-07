@@ -177,22 +177,15 @@ export default function SubscriptionPage() {
           headers: {
             'Authorization': `Bearer ${session.access_token}`,
           },
-          redirect: 'follow',
         }
       );
 
-      // Check if redirected to Polar checkout
-      if (response.url && response.url.includes('polar.sh')) {
-        window.location.href = response.url;
-        return;
-      }
-
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Failed to start checkout');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to start checkout');
       }
 
-      // Try to parse JSON response
+      // Parse JSON response with checkout URL
       const data = await response.json();
       if (data.url) {
         window.location.href = data.url;
@@ -222,22 +215,21 @@ export default function SubscriptionPage() {
           headers: {
             'Authorization': `Bearer ${session.access_token}`,
           },
-          redirect: 'follow',
         }
       );
 
-      // Check if redirected to Polar portal
-      if (response.url && response.url.includes('polar.sh')) {
-        window.open(response.url, '_blank');
-        return;
-      }
-
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Failed to open portal');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to open portal');
       }
 
-      alert('Unable to open subscription management. Please try again.');
+      // Parse JSON response with portal URL
+      const data = await response.json();
+      if (data.url) {
+        window.open(data.url, '_blank');
+      } else {
+        throw new Error('No portal URL received');
+      }
     } catch (error: any) {
       console.error('[Subscription] Portal error:', error);
       alert(error.message || 'Failed to open subscription portal');
