@@ -45,7 +45,7 @@ export default function AuthPage() {
   const { signIn, signUp, resetPassword, isLoading, isAuthenticated, error: authError } = useAuth();
   const { trackEvent } = useAnalytics();
   
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

@@ -14,10 +14,14 @@ import {
   ExternalLink,
   Loader2,
   RefreshCw,
+  AlertTriangle,
+  XCircle,
+  Zap,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useUsage } from '@/hooks/useUsage';
 import { supabase } from '@/lib/supabase';
+import { SUBSCRIPTION_PLAN } from '@/types';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
@@ -27,36 +31,60 @@ interface Feature {
   description: string;
 }
 
+interface PainPoint {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+}
+
+const PAIN_POINTS: PainPoint[] = [
+  {
+    icon: Clock,
+    title: 'Hours Lost to Note-Taking',
+    description: 'Manually transcribing meetings steals time from billable work',
+  },
+  {
+    icon: AlertTriangle,
+    title: 'Inaccurate Billing',
+    description: 'Forgotten billable time means lost revenue every month',
+  },
+  {
+    icon: XCircle,
+    title: 'Missed Critical Details',
+    description: 'Reconstructing conversations leads to errors and omissions',
+  },
+];
+
 const FEATURES: Feature[] = [
   {
     icon: Mic,
     title: 'Unlimited Recordings',
-    description: 'Record as many meetings as you need',
+    description: 'No per-minute fees ever — record every meeting',
   },
   {
     icon: FileText,
     title: 'AI Transcription',
-    description: 'Automatic speaker identification & timestamps',
+    description: 'Speaker identification — know exactly who said what',
   },
   {
     icon: Sparkles,
     title: 'Smart Summaries',
-    description: 'AI-generated summaries with key action items',
+    description: 'Action items extracted — never miss a follow-up',
   },
   {
     icon: Share2,
-    title: 'Easy Sharing',
-    description: 'Share transcripts with secure links',
+    title: 'Secure Sharing',
+    description: 'Send transcripts to clients with one click',
   },
   {
     icon: Clock,
-    title: 'Time Tracking',
-    description: 'Automatic billable time calculations',
+    title: 'Auto Time Tracking',
+    description: 'Capture every billable minute automatically',
   },
   {
     icon: Shield,
-    title: 'Secure Storage',
-    description: 'Your recordings are encrypted and private',
+    title: 'Bank-Level Security',
+    description: 'Client confidentiality protected with encryption',
   },
 ];
 
@@ -128,15 +156,10 @@ export default function SubscriptionPage() {
     }
   }, [verifySubscription]);
 
-  // Fetch pricing info
+  // Set pricing from SUBSCRIPTION_PLAN constant
   useEffect(() => {
-    const fetchPricing = async () => {
-      // You can fetch from Polar API or hardcode the price
-      // For now, using a common price point
-      setPriceAmount(19.99);
-      setPriceInterval('month');
-    };
-    fetchPricing();
+    setPriceAmount(SUBSCRIPTION_PLAN.priceMonthly);
+    setPriceInterval('month');
   }, []);
 
   const handleSubscribe = async () => {
@@ -309,6 +332,43 @@ export default function SubscriptionPage() {
           )}
         </div>
 
+        {/* Pain Points Section (for non-subscribers) */}
+        {!hasActiveSubscription && (
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="mb-8"
+          >
+            <h3 className="text-lg font-semibold text-text mb-4">
+              Sound Familiar?
+            </h3>
+            <div className="space-y-3">
+              {PAIN_POINTS.map((point, index) => (
+                <motion.div
+                  key={point.title}
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.15 + index * 0.1 }}
+                  className="bg-surface rounded-xl p-4 border border-warning/30 flex items-start gap-3"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-warning/20 flex items-center justify-center flex-shrink-0">
+                    <point.icon size={20} className="text-warning" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-text mb-0.5">
+                      {point.title}
+                    </h4>
+                    <p className="text-xs text-text-muted">
+                      {point.description}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         {/* Active Subscription Info */}
         {hasActiveSubscription && (
           <motion.div
@@ -369,7 +429,7 @@ export default function SubscriptionPage() {
         {/* Features Grid */}
         <div className="mb-8">
           <h3 className="text-lg font-semibold text-text mb-4">
-            {hasActiveSubscription ? 'Your Benefits' : 'What You Get'}
+            {hasActiveSubscription ? 'Your Benefits' : 'Everything You Need to Win'}
           </h3>
           <div className="grid grid-cols-2 gap-3">
             {FEATURES.map((feature, index) => (
@@ -399,13 +459,21 @@ export default function SubscriptionPage() {
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="bg-gradient-to-br from-accent-light to-accent rounded-2xl p-6 mb-6"
+            className="bg-gradient-to-br from-accent-light to-accent rounded-2xl p-6 mb-6 relative overflow-hidden"
           >
+            {/* Unlimited Badge */}
+            <div className="absolute top-0 right-0">
+              <div className="bg-success text-white text-xs font-bold px-3 py-1.5 rounded-bl-xl flex items-center gap-1">
+                <Zap size={12} />
+                UNLIMITED
+              </div>
+            </div>
+
             <div className="text-center">
-              <span className="text-white/80 text-sm">
-                {priceInterval === 'month' ? 'Monthly' : 'Yearly'}
+              <span className="inline-block bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full mb-3">
+                {SUBSCRIPTION_PLAN.name}
               </span>
-              <div className="flex items-baseline justify-center gap-1 mt-1 mb-4">
+              <div className="flex items-baseline justify-center gap-1 mt-1 mb-2">
                 <span className="text-4xl font-bold text-white">
                   ${priceAmount || '—'}
                 </span>
@@ -413,12 +481,25 @@ export default function SubscriptionPage() {
                   /{priceInterval}
                 </span>
               </div>
+              
+              {/* ROI Statement */}
+              <p className="text-white/90 text-sm mb-5">
+                Pays for itself with just 1 hour saved per week
+              </p>
 
               {/* Feature highlights */}
-              <div className="space-y-2 mb-6">
-                {['Unlimited recordings', 'AI transcription', 'Smart summaries'].map((item) => (
-                  <div key={item} className="flex items-center justify-center gap-2">
-                    <Check size={16} className="text-white" />
+              <div className="space-y-2.5 mb-6 text-left bg-white/10 rounded-xl p-4">
+                {[
+                  'Unlimited recordings — no usage caps',
+                  'AI transcription with speaker ID',
+                  'Auto billable time tracking',
+                  'Secure sharing with clients',
+                  'Bank-level encryption',
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-2.5">
+                    <div className="w-5 h-5 rounded-full bg-success/30 flex items-center justify-center flex-shrink-0">
+                      <Check size={12} className="text-white" />
+                    </div>
                     <span className="text-white text-sm">{item}</span>
                   </div>
                 ))}
@@ -427,15 +508,21 @@ export default function SubscriptionPage() {
               <button
                 onClick={handleSubscribe}
                 disabled={isLoading}
-                className="w-full py-4 bg-white text-accent font-bold rounded-xl hover:bg-white/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+                className="w-full py-4 bg-white text-accent font-bold rounded-xl hover:bg-white/90 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 shadow-lg"
               >
                 {isLoading ? (
                   <Loader2 size={20} className="animate-spin" />
                 ) : (
                   <Sparkles size={20} />
                 )}
-                {hasActiveTrial ? 'Subscribe Now' : 'Start Free Trial'}
+                {hasActiveTrial ? 'Unlock Unlimited Access' : 'Start 7-Day Free Trial'}
               </button>
+              
+              {!hasActiveTrial && (
+                <p className="text-white/70 text-xs mt-3">
+                  No credit card required • Cancel anytime
+                </p>
+              )}
             </div>
           </motion.div>
         )}
